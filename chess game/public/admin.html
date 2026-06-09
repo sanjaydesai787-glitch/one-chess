@@ -1,0 +1,372 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Chess Tournament Admin</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050a16;
+      --surface: #0e1726;
+      --surface-strong: #111b2f;
+      --accent: #38bdf8;
+      --accent-strong: #60a5fa;
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --border: rgba(148, 163, 184, 0.16);
+      --card: #0a1220;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: radial-gradient(circle at top, rgba(56, 189, 248, 0.06), transparent 35%), linear-gradient(180deg, #050a16 0%, #07121f 100%); color: var(--text); font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .app-shell { max-width: 1280px; margin: 0 auto; padding: 28px 24px 36px; }
+    header { display: grid; gap: 18px; margin-bottom: 24px; }
+    .hero { display: flex; flex-wrap: wrap; gap: 18px; justify-content: space-between; align-items: flex-start; }
+    .hero-title { max-width: 720px; }
+    h1 { margin: 0; font-size: clamp(2rem, 3vw, 2.8rem); line-height: 1.02; }
+    .subtitle { margin: 12px 0 0; color: var(--muted); font-size: 1rem; max-width: 680px; }
+    .toolbar { display: grid; gap: 16px; }
+    .toolbar-row { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; }
+    .token-field { min-width: 280px; flex: 1; border-radius: 16px; border: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.95); color: var(--text); padding: 14px 16px; }
+    button { border: 0; border-radius: 16px; padding: 14px 18px; cursor: pointer; transition: transform .18s ease, box-shadow .18s ease, background .18s ease; font-weight: 700; }
+    button:hover { transform: translateY(-1px); }
+    .btn-primary { background: linear-gradient(135deg, #46c1ff, #2b6cb0); color: white; box-shadow: 0 16px 30px rgba(56, 189, 248, 0.18); }
+    .btn-secondary { background: rgba(15, 23, 42, 0.95); color: white; }
+    .btn-light { background: rgba(255,255,255,0.08); color: white; }
+    .btn-danger { background: #ef4444; color: white; }
+    .panel { background: rgba(15, 23, 42, 0.95); border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 28px; padding: 24px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 18px; margin-top: 6px; }
+    .summary-card { padding: 20px 22px; border-radius: 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); min-height: 115px; }
+    .summary-card label { display: block; color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .summary-card strong { display: block; margin-top: 10px; font-size: 2.1rem; line-height: 1.05; }
+    .summary-card label { display: block; color: var(--muted); font-size: 0.95rem; margin-bottom: 10px; }
+    .summary-card strong { display: block; margin-top: 10px; font-size: 2rem; }
+    .board-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); margin-top: 16px; }
+    .board-card { display: grid; grid-template-columns: 1fr auto; gap: 18px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); padding: 18px 20px; min-height: 290px; }
+    .board-card .card-left { display: grid; gap: 10px; }
+    .board-header { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+    .board-title { margin: 0; font-size: 1.05rem; font-weight: 800; }
+    .board-meta { color: var(--muted); font-size: 0.95rem; line-height: 1.5; }
+    .board-score { display: flex; gap: 14px; flex-wrap: wrap; }
+    .board-score span { color: var(--text); font-weight: 700; }
+    .board-snapshot { display: grid; place-items: center; border-radius: 22px; background: rgba(255,255,255,0.08); padding: 14px; width: fit-content; margin: auto 0; }
+    .board-snapshot .board-inner { display: grid; grid-template-columns: repeat(8, 30px); width: fit-content; border-radius: 12px; overflow: hidden; }
+    .board-snapshot .board-square { width: 30px; height: 30px; display: grid; place-items: center; }
+    .board-snapshot .board-square img { width: 22px; height: 22px; }
+    .player-list, .round-list { display: grid; gap: 12px; margin-top: 12px; }
+    .player-row, .round-card { border-radius: 22px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); padding: 16px; }
+    .player-row { display: grid; grid-template-columns: auto 1fr auto; gap: 16px; align-items: center; }
+    .player-avatar { width: 52px; height: 52px; border-radius: 16px; background: linear-gradient(135deg, #2563eb, #38bdf8); display: grid; place-items: center; font-weight: 800; color: white; font-size: 1.15rem; }
+    .player-meta { display: grid; gap: 6px; }
+    .player-name { font-weight: 800; font-size: 1rem; }
+    .player-fide { color: #81e6d9; font-size: 0.92rem; }
+    .player-stats { color: var(--muted); font-size: 0.95rem; line-height: 1.4; }
+    .player-summary-pill { padding: 8px 12px; border-radius: 999px; background: rgba(56, 189, 248, 0.12); color: #dbeafe; font-size: 0.92rem; font-weight: 700; }
+    .round-card h3 { margin: 0 0 10px 0; font-size: 1rem; }
+    .round-game { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; padding: 10px 0 0; border-top: 1px solid rgba(255,255,255,0.06); }
+    .round-game:first-child { border-top: none; padding-top: 0; }
+    .round-game span { display: block; font-size: 0.95rem; }
+    .raw-output { margin-top: 18px; border-radius: 22px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); padding: 20px; min-height: 220px; overflow: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 0.92rem; line-height: 1.5; color: #dbeafe; white-space: pre-wrap; }
+    .checkbox-label { display: inline-flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--text); cursor: pointer; }
+    .checkbox-label input { accent-color: #38bdf8; width: 18px; height: 18px; }
+    @media (max-width: 700px) {
+      .toolbar-row { flex-direction: column; align-items: stretch; }
+      .board-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="hero">
+        <div class="hero-title">
+          <h1>Chess Tournament Admin</h1>
+          <p class="subtitle">Manage matches, view live boards, and advance rounds with an improved overview page.</p>
+        </div>
+      </div>
+
+      <div class="toolbar panel">
+        <div class="toolbar-row">
+          <input id="token" class="token-field" type="password" placeholder="Paste organizer token" />
+          <button id="btnDashboard" class="btn-primary">Live Dashboard</button>
+          <button id="btnStartNext" class="btn-secondary">Start Next Round</button>
+        </div>
+        <div class="toolbar-row">
+          <button id="btnRooms" class="btn-light">Rooms</button>
+          <button id="btnResults" class="btn-light">Results</button>
+          <button id="btnRatings" class="btn-light">Ratings</button>
+          <button id="btnAnalytics" class="btn-light">Analytics</button>
+          <label class="checkbox-label"><input type="checkbox" id="autoRefresh"> Auto-refresh</label>
+        </div>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card"><label>Total rooms</label><strong id="summaryRooms">—</strong></div>
+        <div class="summary-card"><label>Active games</label><strong id="summaryActive">—</strong></div>
+        <div class="summary-card"><label>Finished games</label><strong id="summaryFinished">—</strong></div>
+      </div>
+    </header>
+
+    <section class="panel">
+      <h2 style="margin:0 0 16px 0;">Live room board overview</h2>
+      <div class="board-grid" id="dashboardCards"></div>
+    </section>
+
+    <section class="panel">
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; align-items:center; margin-bottom:16px;">
+        <h2 style="margin:0;">Live player ratings & round record</h2>
+        <span style="color: var(--muted);">Includes FIDE ID and recent win/loss metrics</span>
+      </div>
+      <div id="playerSummary" class="player-list"></div>
+    </section>
+
+    <section class="panel">
+      <div style="display:flex; flex-wrap:wrap; justify-content:space-between; gap:12px; align-items:center; margin-bottom:16px;">
+        <h2 style="margin:0;">Round history</h2>
+        <span style="color: var(--muted);">Completed rounds and results timeline</span>
+      </div>
+      <div id="roundHistory" class="round-list"></div>
+    </section>
+
+    <section class="panel">
+      <h2 style="margin:0 0 16px 0;">Status</h2>
+      <div id="out" class="raw-output">Dashboard ready.</div>
+    </section>
+  </div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+async function api(path, opts = {}) {
+  const token = document.getElementById('token').value.trim();
+  const headers = opts.headers || {};
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(path, { ...opts, headers });
+  const txt = await res.text();
+  try { return JSON.parse(txt); } catch { return txt; }
+}
+
+function renderRaw(value) {
+  const out = document.getElementById('out');
+  if (typeof value === 'string') {
+    out.textContent = value;
+    return;
+  }
+  if (value && value.error) {
+    out.textContent = `Error: ${value.error}`;
+    return;
+  }
+  if (Array.isArray(value)) {
+    out.textContent = `Loaded ${value.length} entries.`;
+    return;
+  }
+  if (typeof value === 'object' && value !== null) {
+    if (value.rooms) {
+      out.textContent = `Loaded ${value.rooms.length} room${value.rooms.length === 1 ? '' : 's'}.`;
+      return;
+    }
+    out.textContent = 'Response received. See board preview for active rooms.';
+    return;
+  }
+  out.textContent = String(value);
+}
+
+function updateSummary(data) {
+  const rooms = data.rooms || [];
+  document.getElementById('summaryRooms').textContent = String(rooms.length);
+  document.getElementById('summaryActive').textContent = String(rooms.filter(r => r.status === 'playing').length);
+  document.getElementById('summaryFinished').textContent = String(rooms.filter(r => r.status === 'finished').length);
+}
+
+function updateBoardCards(rooms) {
+  const cards = document.getElementById('dashboardCards');
+  cards.innerHTML = '';
+  if (!rooms || rooms.length === 0) {
+    cards.innerHTML = '<div style="color: var(--muted); padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.03);">No current rooms available.</div>';
+    return;
+  }
+  rooms.forEach(room => {
+    const card = document.createElement('article');
+    card.className = 'board-card';
+    card.innerHTML = `
+      <div class="board-header">
+        <div>
+          <p class="board-title">${room.id}</p>
+          <p class="board-meta">${room.white || 'White'}${room.whiteRating ? ` (${room.whiteRating})` : ''} vs ${room.black || 'Black'}${room.blackRating ? ` (${room.blackRating})` : ''}</p>
+        </div>
+        <span class="board-meta">${room.status}${room.roundNumber ? ` · Round ${room.roundNumber}` : ''}</span>
+      </div>
+      <div class="board-snapshot">${fenToHtmlBoard(room.fen || '8/8/8/8/8/8/8/8 w - - 0 1')}</div>
+      <div class="board-meta">White: ${room.whiteTime || 0}s · Black: ${room.blackTime || 0}s</div>
+    `;
+    cards.appendChild(card);
+  });
+}
+
+function fenToHtmlBoard(fen) {
+  const imageBase = 'https://images.chesscomfiles.com/chess-themes/pieces/neo/32';
+  const rows = (fen || '8/8/8/8/8/8/8/8 w - - 0 1').split(' ')[0].split('/');
+  let html = '<div class="board-inner">';
+  for (let r = 0; r < rows.length; r++) {
+    let file = 0;
+    for (const ch of rows[r]) {
+      if (/[1-8]/.test(ch)) {
+        const count = Number(ch);
+        for (let i = 0; i < count; i++) {
+          const isLight = ((r + file) % 2) === 0;
+          const bg = isLight ? '#f0d9b5' : '#b58863';
+          html += `<div class="board-square" style="background:${bg};"></div>`;
+          file++;
+        }
+      } else {
+        const isLight = ((r + file) % 2) === 0;
+        const bg = isLight ? '#f0d9b5' : '#b58863';
+        const color = ch === ch.toUpperCase() ? 'w' : 'b';
+        const piece = ch.toLowerCase();
+        html += `<div class="board-square" style="background:${bg};"><img src="${imageBase}/${color}${piece}.png" alt="${ch}" /></div>`;
+        file++;
+      }
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+async function fetchDashboard() {
+  const token = document.getElementById('token').value.trim();
+  const headers = token ? { 'Authorization': 'Bearer ' + token } : {};
+  const res = await fetch('/organizer/dashboard', { headers });
+  if (!res.ok) {
+    const error = await res.text();
+    renderRaw(`Error ${res.status}: ${error}`);
+    return;
+  }
+  const data = await res.json();
+  updateSummary(data);
+  updateBoardCards(data.rooms || []);
+  updatePlayerSummary(data.playerSummaries || []);
+  updateRoundHistory(data.roundHistory || []);
+  renderRaw('Dashboard refreshed.');
+}
+
+function updatePlayerSummary(players) {
+  const container = document.getElementById('playerSummary');
+  container.innerHTML = '';
+  if (!players || players.length === 0) {
+    container.innerHTML = '<div class="player-row" style="justify-content:center; color: var(--muted);">No player summaries available.</div>';
+    return;
+  }
+  players.forEach(player => {
+    const row = document.createElement('div');
+    row.className = 'player-row';
+    row.innerHTML = `
+      <div class="player-avatar">${player.name.slice(0, 2).toUpperCase()}</div>
+      <div class="player-meta">
+        <div class="player-name">${player.name}</div>
+        <div class="player-fide">${player.fideId ? `FIDE ${player.fideId}` : 'FIDE not set'}</div>
+        <div class="player-stats">Rating ${player.rating} · W:${player.wins} L:${player.losses} D:${player.draws}</div>
+      </div>
+      <div class="player-summary-pill">${player.games.length} games</div>
+    `;
+    container.appendChild(row);
+  });
+}
+
+function updateRoundHistory(rounds) {
+  const container = document.getElementById('roundHistory');
+  container.innerHTML = '';
+  if (!rounds || rounds.length === 0) {
+    container.innerHTML = '<div class="round-card" style="color: var(--muted);">No completed rounds yet.</div>';
+    return;
+  }
+  rounds.forEach(round => {
+    const card = document.createElement('div');
+    card.className = 'round-card';
+    card.innerHTML = `
+      <h3>${round.title}</h3>
+      ${round.games.map(game => `
+        <div class="round-game">
+          <span>${game.white} vs ${game.black}</span>
+          <span>${game.result}${game.reason ? ` (${game.reason})` : ''}</span>
+        </div>
+      `).join('')}
+    `;
+    container.appendChild(card);
+  });
+}
+
+function getFriendlyStatus(path, data) {
+  if (!data) return 'Request completed.';
+  if (data.error) return `Error: ${data.error}`;
+  if (path === '/rooms' && Array.isArray(data)) return `Loaded ${data.length} room${data.length === 1 ? '' : 's'}. Use Live Dashboard to preview active games.`;
+  if (path === '/organizer/results' && Array.isArray(data)) return `Loaded ${data.length} results.`;
+  if (path === '/ratings' && Array.isArray(data)) return `Loaded ${data.length} ratings.`;
+  if (path === '/organizer/analytics' && data.statistics) return `Analytics loaded. Total games ${data.statistics.totalGames}.`;
+  if (data.rooms) return `Loaded ${data.rooms.length} room${data.rooms.length === 1 ? '' : 's'}.`;
+  return 'Response received. See board preview for active rooms.';
+}
+
+async function handleButton(path) {
+  renderRaw('loading...');
+  try {
+    const data = await api(path);
+    renderRaw(getFriendlyStatus(path, data));
+  } catch (error) {
+    renderRaw(String(error));
+  }
+}
+
+document.getElementById('btnRooms').addEventListener('click', () => handleButton('/rooms'));
+document.getElementById('btnResults').addEventListener('click', () => handleButton('/organizer/results'));
+document.getElementById('btnRatings').addEventListener('click', () => handleButton('/ratings'));
+document.getElementById('btnAnalytics').addEventListener('click', () => handleButton('/organizer/analytics'));
+document.getElementById('btnDashboard').addEventListener('click', async () => { renderRaw('Refreshing dashboard...'); await fetchDashboard(); });
+
+document.getElementById('btnStartNext').addEventListener('click', async () => {
+  const token = document.getElementById('token').value.trim();
+  if (!token) { alert('Paste organizer token first'); return; }
+  if (!confirm('Start next round using Swiss pairing for all rated players?')) return;
+  renderRaw('starting...');
+  try {
+    const rres = await fetch('/ratings');
+    const ratings = await rres.json();
+    const players = (ratings || []).map(r => r.name);
+    const res = await fetch('/organizer/start-round', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+      body: JSON.stringify({ players, baseTime: 300, mode: 'swiss', autoNext: true }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data?.error || 'failed');
+    renderRaw(data);
+  } catch (error) {
+    renderRaw(String(error));
+  }
+});
+
+let autoHandle = null;
+document.getElementById('autoRefresh').addEventListener('change', (event) => {
+  if (event.target.checked) {
+    fetchDashboard();
+    autoHandle = setInterval(fetchDashboard, 3000);
+  } else if (autoHandle) {
+    clearInterval(autoHandle);
+    autoHandle = null;
+  }
+});
+
+const socket = window.io ? io() : null;
+if (socket) {
+  socket.on('connect', () => {
+    console.log('Admin dashboard connected to socket server');
+  });
+  socket.on('roomsList', async () => {
+    await fetchDashboard();
+  });
+  socket.on('connect_error', (err) => {
+    console.warn('Socket connection failed:', err);
+  });
+}
+
+window.addEventListener('DOMContentLoaded', fetchDashboard);
+</script>
+</body>
+</html>

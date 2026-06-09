@@ -1,0 +1,54 @@
+[
+  {
+    "name": "sanj",
+    "fideId": "12345678",
+    "rating": 1616
+  },
+  {
+    "name": "pooja",
+    "fideId": "87654321",
+    "rating": 1584
+  },
+  {
+    "username": "admin",
+    "passwordHash": "$2a$10$GVqux8xlea3gu0iVRHu4Fuq8LDU25Hh0RlpQR8Pd75s7fE0Di7coS",
+    "role": "organizer",
+    "lastRoomId": null,
+    "lastColor": null
+  },
+  {
+    "username": "testuserx",
+    "passwordHash": "$2a$10$eBonNe6RvQ4cx3ybCBcy1.NYqLs.Mx4pArg.345myFJfgBShucl0S",
+    "role": "player",
+    "lastRoomId": null,
+    "lastColor": null
+  },
+  {
+    "username": "testuser123",
+    "passwordHash": "$2a$10$CcwmIuZ3ugIqZ0mb8qfPQOyo1qyoY3Q4O0/r61tglFUlbnDFRT.0q",
+    "role": "player",
+    "lastRoomId": null,
+    "lastColor": null
+  },
+  {
+    "username": "desai1417@gmail.com",
+    "passwordHash": "$2a$10$YPdtF1QKoC72l1fQACWnaON0kr0etb2QDNoABAKDjFJ1jhNhpfoJa",
+    "role": "player",
+    "lastRoomId": "7RN49U",
+    "lastColor": "white"
+  },
+  {
+    "username": "sanjay",
+    "passwordHash": "$2a$10$v7ldghreO1pSL0kqOP6xYut/eyJzs3Ey8O0X6rLcrsLxrBHRnQyzq",
+    "role": "player",
+    "lastRoomId": "SF9WV1",
+    "lastColor": "black"
+  },
+  {
+    "username": "pooja",
+    "passwordHash": "$2a$10$Yyaayr9u1rzD114JXGVsIuK.77eg6/TfAngHIEKGLOdYvjasWhp1W",
+    "role": "player",
+    "lastRoomId": "6CIK1Y",
+    "lastColor": "white"
+  }
+]

@@ -1,0 +1,67 @@
+[
+  {
+    "roomId": "B5Z2Q0",
+    "reason": "checkmate",
+    "result": "sanj wins by checkmate",
+    "finishedAt": "2026-06-01T09:14:19.177Z",
+    "white": "sanj",
+    "black": "pooja"
+  },
+  {
+    "roomId": "FPX480",
+    "reason": "time",
+    "result": "pooja wins on time",
+    "finishedAt": "2026-06-01T10:26:29.963Z"
+  },
+  {
+    "roomId": "THIK3Z",
+    "reason": "time",
+    "result": "pooja wins on time",
+    "finishedAt": "2026-06-01T10:43:52.467Z"
+  },
+  {
+    "roomId": "332T1I",
+    "reason": "time",
+    "result": "pooja wins on time",
+    "finishedAt": "2026-06-01T10:58:53.771Z"
+  },
+  {
+    "roomId": "7F42UF",
+    "reason": "time",
+    "result": "POOJA 10 wins on time",
+    "roundNumber": null,
+    "finishedAt": "2026-06-01T11:34:32.099Z"
+  },
+  {
+    "roomId": "Z67HT5",
+    "reason": "checkmate",
+    "result": "SANJAY wins by checkmate",
+    "roundNumber": null,
+    "finishedAt": "2026-06-01T11:44:05.118Z",
+    "white": "SANJAY",
+    "black": "POOJA"
+  },
+  {
+    "roomId": "GV3JLY",
+    "reason": "resignation",
+    "result": "POOJA wins by resignation",
+    "roundNumber": null,
+    "white": "SANJAY",
+    "black": "POOJA",
+    "finishedAt": "2026-06-01T12:00:42.550Z"
+  },
+  {
+    "roomId": "7RN49U",
+    "reason": "time",
+    "result": "desai1417@gmail.com wins on time",
+    "finishedAt": "2026-06-08T11:35:59.482Z"
+  },
+  {
+    "roomId": "SF9WV1",
+    "reason": "checkmate",
+    "result": "sanjay wins by checkmate",
+    "finishedAt": "2026-06-08T13:05:26.271Z",
+    "white": "sanjay",
+    "black": "sanjay"
+  }
+]
