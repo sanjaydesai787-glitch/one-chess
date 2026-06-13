@@ -5,6 +5,9 @@ import fs from "fs";
 import path from "path";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
+import { fileURLToPath } from "url";
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const httpServer = createServer();
 const io = new Server(httpServer, {
@@ -552,9 +555,35 @@ function writeNoContent(res) {
 
 // Simple HTTP endpoint to list rooms
 httpServer.on("request", (req, res) => {
+  if (req.url && req.url.startsWith("/socket.io")) {
+    return;
+  }
+
+  const filePath = path.join(__dirname, "dist", req.url === "/" ? "index.html" : req.url);
+  const ext = path.extname(filePath);
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+    const contentType = {
+      '.html': 'text/html',
+      '.js': 'application/javascript',
+      '.css': 'text/css',
+      '.json': 'application/json',
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.svg': 'image/svg+xml',
+    }[ext] || 'application/octet-stream';
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(fs.readFileSync(filePath));
+    return;
+  }
+
   setCorsHeaders(res);
   if (req.method === "OPTIONS") {
     writeNoContent(res);
+    return;
+  }
+
+  if (req.method === "GET" && req.url === "/health") {
+    writeJson(res, 200, { status: "ok" });
     return;
   }
 
@@ -830,11 +859,68 @@ httpServer.on("request", (req, res) => {
       return;
     }
   }
+
+  if (req.method === "GET" && req.headers.accept && req.headers.accept.includes("text/html")) {
+    const indexPath = path.join(__dirname, "dist", "index.html");
+    if (fs.existsSync(indexPath)) {
+      res.writeHead(200, { "Content-Type": "text/html" });
+      res.end(fs.readFileSync(indexPath));
+      return;
+    }
+  }
+
   // allow other requests to pass through (e.g. socket.io)
 });
 
 ensureOrganizerAccount();
 const PORT = process.env.PORT || 4000;
-httpServer.listen(PORT, () => {
+httpServer.on("error", (error) => {
+  console.error("HTTP server error:", error);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("Uncaught exception:", error);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
+
+// Graceful shutdown for Render and container environments
+function gracefulShutdown(signal) {
+  console.log(`Received ${signal}, shutting down gracefully.`);
+  try {
+    // stop accepting new connections
+    httpServer.close(() => {
+      console.log('HTTP server closed.');
+      try {
+        io.close(() => {
+          console.log('Socket.IO closed.');
+          persistConnections();
+          process.exit(0);
+        });
+      } catch (e) {
+        console.error('Error closing Socket.IO:', e);
+        persistConnections();
+        process.exit(1);
+      }
+    });
+    // force exit after timeout
+    setTimeout(() => {
+      console.error('Shutdown timed out, forcing exit.');
+      persistConnections();
+      process.exit(1);
+    }, 10000).unref();
+  } catch (e) {
+    console.error('Error during graceful shutdown:', e);
+    persistConnections();
+    process.exit(1);
+  }
+}
+
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`Multiplayer server running on port ${PORT}`);
 });

@@ -54,6 +54,8 @@ function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [authUsername, setAuthUsername] = useState("");
   const [authRole, setAuthRole] = useState<string | null>(null);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [guestMode, setGuestMode] = useState(false);
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [registerUsername, setRegisterUsername] = useState("");
@@ -69,7 +71,7 @@ function App() {
   const [organizerResults, setOrganizerResults] = useState<any[]>([]);
   const [whiteName, setWhiteName] = useState("White");
   const [blackName, setBlackName] = useState("Black");
-  const isLoggedIn = !!authToken;
+  const isLoggedIn = !!authToken || guestMode;
   const isAdmin = isLoggedIn && authRole === "organizer";
   const isPlayer = isLoggedIn && authRole === "player";
   const [fen, setFen] = useState("start");
@@ -80,7 +82,15 @@ function App() {
   const [resultText, setResultText] = useState<string | null>(null);
   const [baseTime, setBaseTime] = useState(300);
   const [increment, setIncrement] = useState(2);
-  const serverUrl = (import.meta.env.VITE_SERVER_URL as string) || "http://localhost:4000";
+  
+  // Auto-detect server URL: use env var if set, otherwise current origin
+  const getServerUrl = () => {
+    const envUrl = (import.meta.env.VITE_SERVER_URL as string) || "";
+    if (envUrl) return envUrl;
+    // For production, connect to same origin (Render will serve both)
+    return typeof window !== "undefined" ? window.location.origin : "http://localhost:4000";
+  };
+  const serverUrl = getServerUrl();
 
   function applyRoomState(payload: MatchState) {
     setMatchStatus(payload.status);
@@ -108,10 +118,10 @@ function App() {
   }, []);
 
   useEffect(() => {
-    const socketUrl = (import.meta.env.VITE_SERVER_URL as string) || "http://localhost:4000";
+    const socketUrl = serverUrl || undefined;
     const socket = io(socketUrl, {
       transports: ["websocket"],
-      auth: { token: authToken },
+      ...(authToken ? { auth: { token: authToken } } : {}),
     });
 
     socketRef.current = socket;
@@ -160,12 +170,12 @@ function App() {
     return () => {
       socket.disconnect();
     };
-  }, [authToken, authRole]);
+  }, [authToken, authRole, guestMode]);
 
   const moveHistoryLines = useMemo(() => formatMoveHistory(moveHistory), [moveHistory]);
 
   function handleJoinRoom(targetRoomId: string) {
-    if (!authToken) {
+    if (!authToken && !guestMode) {
       setStatusMessage("Please log in first to join a match.");
       return;
     }
@@ -189,7 +199,7 @@ function App() {
   }
 
   function handleJoinRoomAsSpectator(targetRoomId: string) {
-    if (!authToken) {
+    if (!authToken && !guestMode) {
       setStatusMessage("Please log in first to spectate a match.");
       return;
     }
@@ -215,7 +225,7 @@ function App() {
   }
 
   function handleCreateMatch() {
-    if (!authToken) {
+    if (!authToken && !guestMode) {
       setStatusMessage("Please log in first to create a match.");
       return;
     }
@@ -297,7 +307,7 @@ function App() {
 
   async function handleLogin() {
     try {
-      const res = await fetch(`${(import.meta.env.VITE_SERVER_URL as string) || "http://localhost:4000"}/auth/login`, {
+      const res = await fetch(`${serverUrl || ""}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: loginUsername.trim(), password: loginPassword }),
@@ -321,7 +331,7 @@ function App() {
 
   async function handleRegister() {
     try {
-      const res = await fetch(`${(import.meta.env.VITE_SERVER_URL as string) || "http://localhost:4000"}/auth/register`, {
+      const res = await fetch(`${serverUrl || ""}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: registerUsername.trim(), password: registerPassword }),
@@ -348,11 +358,20 @@ function App() {
     setAuthToken(null);
     setAuthUsername("");
     setAuthRole(null);
+    setGuestMode(false);
     setPlayerHistory([]);
     localStorage.removeItem("chessToken");
     localStorage.removeItem("chessUsername");
     localStorage.removeItem("chessRole");
     setStatusMessage("Logged out.");
+  }
+
+  function handleGuestAccess() {
+    setGuestMode(true);
+    setAuthUsername("Guest");
+    setAuthRole("guest");
+    setPlayerName("Guest");
+    setStatusMessage("Guest access enabled. Join a match or spectate a game.");
   }
 
   function handleReconnectToLastRoom() {
@@ -366,7 +385,7 @@ function App() {
       return;
     }
     try {
-      const res = await fetch(`${(import.meta.env.VITE_SERVER_URL as string) || "http://localhost:4000"}/organizer/dashboard`, {
+      const res = await fetch(`${serverUrl || ""}/organizer/dashboard`, {
         headers: { Authorization: `Bearer ${authToken}` },
       });
       const data = await res.json();
@@ -453,6 +472,164 @@ function App() {
 
   const isMyTurn = playerColor === "white" ? currentTurn === "w" : currentTurn === "b";
 
+  if (!isLoggedIn) {
+    return (
+      <div className="auth-page">
+        <div className="auth-page-inner">
+          <section className="auth-left">
+            <div className="auth-logo">
+              <span className="logo-mark">♞</span>
+              <span>ChessMaster</span>
+            </div>
+
+            <div className="auth-hero-copy">
+              <h1>
+                Play. <span className="auth-highlight">Learn.</span><br />
+                Win.
+              </h1>
+              <p>Join thousands of players around the world and enjoy the game of kings.</p>
+            </div>
+
+            <div className="auth-feature-list">
+              <div className="feature-item">
+                <div className="feature-icon">♟</div>
+                <div>
+                  <strong>Play Online</strong>
+                  <span>Challenge players worldwide</span>
+                </div>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">♜</div>
+                <div>
+                  <strong>Improve Rating</strong>
+                  <span>Climb the leaderboard</span>
+                </div>
+              </div>
+              <div className="feature-item">
+                <div className="feature-icon">♚</div>
+                <div>
+                  <strong>Learn & Analyze</strong>
+                  <span>Study games and puzzles</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="auth-stats">
+              <div className="stat-card">
+                <strong>50K+</strong>
+                <span>Players</span>
+              </div>
+              <div className="stat-card">
+                <strong>10K+</strong>
+                <span>Games Today</span>
+              </div>
+              <div className="stat-card">
+                <strong>2K+</strong>
+                <span>Tournaments</span>
+              </div>
+            </div>
+
+            <div className="auth-quote">
+              “Chess is the gymnasium of the mind.”
+              <span className="auth-quote-author">– Blaise Pascal</span>
+            </div>
+          </section>
+
+          <section className="auth-right">
+            <div className="auth-tabs">
+              <button className={`auth-tab ${authMode === "login" ? "active" : ""}`} onClick={() => setAuthMode("login")}>
+                Login
+              </button>
+              <button className={`auth-tab ${authMode === "signup" ? "active" : ""}`} onClick={() => setAuthMode("signup")}>
+                Sign Up
+              </button>
+            </div>
+
+            <div className="auth-welcome">
+              <div className="welcome-icon">♞</div>
+              <h2>Welcome Back!</h2>
+              <p>Login to continue your chess journey</p>
+            </div>
+
+            <div className="auth-social-group">
+              <button className="auth-social-button google" type="button">
+                <span>G</span> Continue with Google
+              </button>
+              <button className="auth-social-button github" type="button">
+                <span>GH</span> Continue with GitHub
+              </button>
+            </div>
+
+            <div className="auth-divider">or</div>
+
+            <div className="auth-field">
+              <label>
+                Email address
+                <input
+                  type="email"
+                  value={authMode === "login" ? loginUsername : registerUsername}
+                  onChange={(event) =>
+                    authMode === "login"
+                      ? setLoginUsername(event.target.value)
+                      : setRegisterUsername(event.target.value)
+                  }
+                  placeholder="Email address"
+                />
+              </label>
+              <label>
+                Password
+                <input
+                  type="password"
+                  value={authMode === "login" ? loginPassword : registerPassword}
+                  onChange={(event) =>
+                    authMode === "login"
+                      ? setLoginPassword(event.target.value)
+                      : setRegisterPassword(event.target.value)
+                  }
+                  placeholder="Password"
+                />
+              </label>
+              <div className="auth-forgot">Forgot password?</div>
+            </div>
+
+            <div className="auth-action">
+              <button
+                className="auth-submit-button"
+                type="button"
+                onClick={authMode === "login" ? handleLogin : handleRegister}
+              >
+                {authMode === "login" ? "Login" : "Create account"}
+              </button>
+              <button className="auth-guest-button" type="button" onClick={handleGuestAccess}>
+                Play as Guest
+              </button>
+            </div>
+
+            <div className="auth-footer">
+              {authMode === "login" ? (
+                <>
+                  Don't have an account?{' '}
+                  <button type="button" onClick={() => setAuthMode("signup")}>
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <>
+                  Already have an account?{' '}
+                  <button type="button" onClick={() => setAuthMode("login")}>
+                    Login
+                  </button>
+                </>
+              )}
+            </div>
+
+            <div className="auth-status">{statusMessage}</div>
+          </section>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -522,7 +699,7 @@ function App() {
           >
             <h2 style={{ marginTop: 0, marginBottom: "18px" }}>Match setup</h2>
             <div style={{ display: "grid", gap: "14px" }}>
-              {!authToken ? (
+              {!isLoggedIn ? (
                 <div style={{ display: "grid", gap: "12px", padding: "14px", borderRadius: "14px", backgroundColor: "#111827" }}>
                   <div style={{ fontWeight: 600 }}>Login or register</div>
                   <div style={{ display: "grid", gap: "10px" }}>
@@ -686,7 +863,7 @@ function App() {
                     </button>
                   </div>
                 </div>
-              ) : !authToken ? (
+              ) : !isLoggedIn ? (
                 <div style={{ padding: "18px", borderRadius: "16px", backgroundColor: "#111827" }}>
                   <div style={{ color: "#cbd5e1" }}>Log in to create or join matches and view your past games.</div>
                 </div>

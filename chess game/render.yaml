@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: chess-tournament
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile

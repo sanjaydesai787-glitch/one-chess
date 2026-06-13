@@ -41,14 +41,14 @@
     "username": "sanjay",
     "passwordHash": "$2a$10$v7ldghreO1pSL0kqOP6xYut/eyJzs3Ey8O0X6rLcrsLxrBHRnQyzq",
     "role": "player",
-    "lastRoomId": "SF9WV1",
-    "lastColor": "black"
+    "lastRoomId": "AHMALH",
+    "lastColor": "white"
   },
   {
     "username": "pooja",
     "passwordHash": "$2a$10$Yyaayr9u1rzD114JXGVsIuK.77eg6/TfAngHIEKGLOdYvjasWhp1W",
     "role": "player",
-    "lastRoomId": "6CIK1Y",
-    "lastColor": "white"
+    "lastRoomId": "AHMALH",
+    "lastColor": "black"
   }
 ]
